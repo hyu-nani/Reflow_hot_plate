@@ -1,15 +1,3 @@
-﻿/*
- * deviceConnect.h
- *
- * Created: 2021-12-26 오후 9:29:54
- *  Author: cube_
- */ 
-
-
-#ifndef DEVICECONNECT_H_
-#define DEVICECONNECT_H_
-
-#endif /* DEVICECONNECT_H_ */
 
 #define TFT_RES	0	//D3
 #define TFT_CS	14	//D5
@@ -29,4 +17,45 @@ void deviceInit(){
 	pinMode(SW_R,INPUT);
 	pinMode(Plate,OUTPUT);
 	pinMode(Temp,INPUT);
+	digitalWrite(Plate,LOW);
+}
+
+char readSW(){
+		int i=0;
+		if (digitalRead(SW_L))
+		i += 1;
+		if (digitalRead(SW_M))
+		i += 3;
+		if (digitalRead(SW_R))
+		i += 5;
+		//while (digitalRead(SW_L)){delay(10);}
+		//while (digitalRead(SW_M)){delay(10);}
+		//while (digitalRead(SW_R)){delay(10);}
+		switch (i)
+		{
+			case 1:
+			return 'L';	//left
+			break;
+			case 3:
+			return 'M';	//middle
+			break;
+			case 4:
+			return 'A'; //middle & left
+			break;
+			case 5:
+			return 'R';	//right
+			break;
+			case 6:
+			return 'B';	//right & lest
+			break;
+			case 8:
+			return 'C'; //middle & right
+			break;
+			case 9:
+			return 'D'; //ALL
+			break;
+			default:
+			return 'n';
+			break;
+		}
 }
