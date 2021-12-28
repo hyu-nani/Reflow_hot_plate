@@ -1249,13 +1249,13 @@ build.arch=AVR
     <Compile Include="font.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="formation.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="LCDbasic.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="ST7735.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="__vm\.Elongboard.vsarduino.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="__vm\.main.vsarduino.h">

@@ -1,5 +1,4 @@
 
-
 // Standard ASCII 5x7 font
 static const unsigned char font[] PROGMEM = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 

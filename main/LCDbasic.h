@@ -1,4 +1,5 @@
 #include "font.h"
+#include "logo.c"
 
 #define LCD_swap(a, b) { u16 t = a; a = b; b = t; }
 boolean wrap;

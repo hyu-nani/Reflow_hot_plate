@@ -1,22 +1,3 @@
-/*
- * ST7735.h
- *
- * Created: 2021-12-26 ¿ÀÈÄ 9:39:38
- *  Author: cube_
- */ 
-
-
-#ifndef ST7735_H_
-#define ST7735_H_
-
-
-
-
-
-#endif /* ST7735_H_ */
-
-//deviceConnect
-
 
 #define WHITE            0xFFFF
 #define BLACK            0x0000

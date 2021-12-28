@@ -1,12 +1,28 @@
 
-#define TFT_RES	0	//D3
-#define TFT_CS	14	//D5
-#define TFT_DC	2	//D4
-#define SW_L	16	//D0
-#define SW_M	5	//D1
-#define SW_R	4	//D2
-#define Plate	1	//TX
+#define TFT_RES	3	//D3
+#define TFT_CS	5	//
+#define TFT_DC	1	//
+#define SW_L	16	
+#define SW_R	9	
+#define SW_M	10
+#define Plate1	4
+#define Plate2	12
 #define Temp	A0	
+#define SCK		14
+#define MOSI	13
+/*
+#define TFT_RES	4
+#define TFT_CS	8
+#define TFT_DC	3
+#define SW_L	2
+#define SW_R	0
+#define SW_U	10
+#define SW_D	1
+#define Plate	11
+#define Temp	A0
+#define SCK		5
+#define MOSI	7
+*/
 
 void deviceInit(){
 	pinMode(TFT_RES,OUTPUT);
@@ -15,9 +31,11 @@ void deviceInit(){
 	pinMode(SW_L,INPUT);
 	pinMode(SW_M,INPUT);
 	pinMode(SW_R,INPUT);
-	pinMode(Plate,OUTPUT);
+	pinMode(Plate1,OUTPUT);
+	pinMode(Plate2,OUTPUT);
 	pinMode(Temp,INPUT);
-	digitalWrite(Plate,LOW);
+	digitalWrite(Plate1,HIGH);
+	digitalWrite(Plate2,HIGH);
 }
 
 char readSW(){
@@ -46,7 +64,7 @@ char readSW(){
 			return 'R';	//right
 			break;
 			case 6:
-			return 'B';	//right & lest
+			return 'B';	//right & left
 			break;
 			case 8:
 			return 'C'; //middle & right
