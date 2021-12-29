@@ -23,21 +23,24 @@ void setup() {
 	int timeNow = millis(); 
 }
 
+int keepTemp = 0;
 int mode = 0;
 
 void loop() {
-	mainScreen();
-	
 	while(mode==0)	//main screen
 	{
-		while(1){
+	  mainScreen();
+		while(true)
+		{
 			char inputButton = readSW(false);
-			if (inputButton=='L'){
+			if (inputButton=='L')
+			{
 				LCD_fill_Rect(1,62,48,17,LGRAY);
 				LCD_fill_Rect(51,62,58,17,BLACK);
 				LCD_fill_Rect(111,62,48,17,BLACK);
 			}
-			else if(inputButton == 'M'){
+			else if(inputButton == 'M')
+			{
 				LCD_fill_Rect(1,62,48,17,BLACK);
 				LCD_fill_Rect(51,62,58,17,LGRAY);
 				LCD_fill_Rect(111,62,48,17,BLACK);
@@ -48,27 +51,32 @@ void loop() {
 				LCD_fill_Rect(51,62,58,17,BLACK);
 				LCD_fill_Rect(111,62,48,17,LGRAY);
 			}
-			else if(inputButton == 'A'){
+			else if(inputButton == 'A')
+			{
 				LCD_fill_Rect(1,62,48,17,LGRAY);
 				LCD_fill_Rect(51,62,58,17,LGRAY);
 				LCD_fill_Rect(111,62,48,17,BLACK);
 			}
-			else if(inputButton == 'B'){
+			else if(inputButton == 'B')
+			{
 				LCD_fill_Rect(1,62,48,17,LGRAY);
 				LCD_fill_Rect(51,62,58,17,BLACK);
 				LCD_fill_Rect(111,62,48,17,LGRAY);
 			}
-			else if(inputButton == 'C'){
+			else if(inputButton == 'C')
+			{
 				LCD_fill_Rect(1,62,48,17,BLACK);
 				LCD_fill_Rect(51,62,58,17,LGRAY);
 				LCD_fill_Rect(111,62,48,17,LGRAY);
 			}
-			else if(inputButton == 'D'){
+			else if(inputButton == 'D')
+			{
 				LCD_fill_Rect(1,62,48,17,LGRAY);
 				LCD_fill_Rect(51,62,58,17,LGRAY);
 				LCD_fill_Rect(111,62,48,17,LGRAY);
 			}
-			else{
+			else
+			{
 				LCD_fill_Rect(1,62,48,17,BLACK);
 				LCD_fill_Rect(51,62,58,17,BLACK);
 				LCD_fill_Rect(111,62,48,17,BLACK);
@@ -93,17 +101,36 @@ void loop() {
 	while(mode==1)	//soldering start
 	{
 		startScreen();
-		while(1){
+		while(true)
+		{
 			digitalWrite(Plate1,LOW);
 			delay(100);
 			char inputButton = readSW(true);
-			if(inputButton=='M'){
+			if(inputButton=='M')
+			{
 				mode = 0;
 			}
 			if(mode!=1)
 				break;
 		}
 		
+	}
+	while(mode==2)  //keep to temperature mode
+	{
+    keepScreen();
+    while(true)
+    {
+      int currentTemp = checkTemp();
+      if(keepTemp < currentTemp-10)
+      {
+        digitalWrite(Plate1,LOW); //on
+        LCD_print(40,40,"HEATER ON",RED,1);
+      }else{
+        digitalWrite(Plate1,HIGH);  //off
+        LCD_print(40,40,"HEATER OFF",RED,1);
+      }
+      
+    }
 	}
 	
 }
