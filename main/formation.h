@@ -22,3 +22,10 @@ void startScreen(){
 	LCD_display_ON();
 }
 
+void keepScreen(){
+  LCD_display_OFF();
+  LCD_Fill(BLACK);
+  LCD_print(15,0,"-Keep temp-",CYAN,2);
+  LCD_display_ON();
+}
+
