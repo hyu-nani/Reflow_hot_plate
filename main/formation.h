@@ -1,5 +1,6 @@
 
-void mainScreen(){
+void mainScreen()
+{
 	LCD_display_OFF();
 	LCD_Fill(BLACK);
 	LCD_print(10,0,"ReFlow",CYAN,2);
@@ -15,17 +16,25 @@ void mainScreen(){
 	LCD_display_ON();
 }
 
-void startScreen(){
+void startScreen()
+{
 	LCD_display_OFF();
 	LCD_Fill(BLACK);
 	LCD_print(15,0,"---START---",CYAN,2);
 	LCD_display_ON();
 }
 
-void keepScreen(){
+void keepScreen()
+{
   LCD_display_OFF();
   LCD_Fill(BLACK);
   LCD_print(15,0,"-Keep temp-",CYAN,2);
   LCD_display_ON();
 }
 
+void setScreen()
+{
+  LCD_display_OFF();
+  LCD_Fill(BLACK);
+  LCD_display_ON();
+}
