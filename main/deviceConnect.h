@@ -38,7 +38,7 @@ void deviceInit(){
 	digitalWrite(Plate2,HIGH);
 }
 
-char readSW(){
+char readSW(boolean nonStop){
 		int i=0;
 		if (digitalRead(SW_L))
 		i += 1;
@@ -46,9 +46,11 @@ char readSW(){
 		i += 3;
 		if (digitalRead(SW_R))
 		i += 5;
-		//while (digitalRead(SW_L)){delay(10);}
-		//while (digitalRead(SW_M)){delay(10);}
-		//while (digitalRead(SW_R)){delay(10);}
+		if(nonStop == true){
+			while (digitalRead(SW_L)){delay(10);}
+			while (digitalRead(SW_M)){delay(10);}
+			while (digitalRead(SW_R)){delay(10);}
+		}
 		switch (i)
 		{
 			case 1:
@@ -76,4 +78,32 @@ char readSW(){
 			return 'n';
 			break;
 		}
+}
+
+
+/************************************************************************/
+/*  TEMPERATURE SENSING CODE                                            */
+/************************************************************************/
+//sensor information
+float	SensingTempMax	=	105.1;	//
+float	SensingTempMin	=	-20;	//
+double	TH25			=	10000;	//register of thermistor at 25`
+double	B_Value			=	4200;	//B parameter
+
+//circuit information
+float	R1		=	9400;	//series register
+double	T0		=	298.15;	//K	275.15 + 25
+
+float	averageTemp1,averageTemp2,averageTemp3;
+float	C;
+double	T;
+int		val;
+double	TH_R;				//thermistor resister
+
+int checkTemp(){
+	val = analogRead(Temp);
+	TH_R	= R1*(1023-val)/val;	//thermistor resister value
+	T		= 1.0/((1.0/T0)+(1.0/B_Value)*log((TH_R/TH25)));
+	C		= T-273.15;
+	return C;
 }

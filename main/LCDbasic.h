@@ -431,35 +431,3 @@ void LCD_print(u16 x,u16 y, int c,u16 color ,uint8_t size)
 	}
 	LCD_CS_Set();
 }
-
-int output_light=0;
-void LCD_smooth_on(int wait,int Bright)
-{
-	delay(10);
-	for(;output_light<Bright;output_light+=5){
-		//ledcWrite(0,output_light);
-		delay(wait);
-	}
-	//ledcWrite(0,Bright);
-	delay(10);
-}
-void LCD_smooth_off(int wait)
-{
-	delay(10);
-	for(;output_light>0;output_light-=5){
-		//ledcWrite(0,output_light);
-		delay(wait);
-	}
-	//ledcWrite(0, 0);
-	delay(10);
-}
-void LCD_off()
-{
-	//ledcWrite(0, 0);
-	delay(10);
-}
-void LCD_on(int Bright)
-{
-	//ledcWrite(0,Bright);
-	delay(10);
-}
