@@ -23,7 +23,7 @@ void setup() {
 	int timeNow = millis(); 
 }
 
-int keepTemp = 0;
+int keepTemp = 100;
 int mode = 0;
 
 void loop() {
@@ -120,17 +120,27 @@ void loop() {
     keepScreen();
     while(true)
     {
+      char inputButton = readSW();
       int currentTemp = checkTemp();
       if(keepTemp < currentTemp-10)
       {
         digitalWrite(Plate1,LOW); //on
         LCD_print(40,40,"HEATER ON",RED,1);
-      }else{
+      }
+      else
+      {
         digitalWrite(Plate1,HIGH);  //off
         LCD_print(40,40,"HEATER OFF",RED,1);
       }
-      
+      if(inputButton == '')
     }
 	}
-	
+	while(mode==3)  //SPISettings
+	{
+	  setScreen();
+	  while(true)
+	  {
+	    delay(10);
+	  }
+	}
 }
