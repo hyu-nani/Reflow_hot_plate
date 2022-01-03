@@ -85,13 +85,13 @@ char readSW(boolean nonStop){
 /*  TEMPERATURE SENSING CODE                                            */
 /************************************************************************/
 //sensor information
-float	SensingTempMax	=	105.1;	//
-float	SensingTempMin	=	-20;	//
-double	TH25			=	10000;	//register of thermistor at 25`
-double	B_Value			=	4200;	//B parameter
+float	SensingTempMax	=	250;	//
+float	SensingTempMin	=	-40;	//
+double	TH25			=	100000;	//register of thermistor at 25`
+double	B_Value			=	4014;	//B parameter
 
 //circuit information
-float	R1		=	9400;	//series register
+float	R1		=	100000;	//series register
 double	T0		=	298.15;	//K	275.15 + 25
 
 float	averageTemp1,averageTemp2,averageTemp3;
@@ -100,7 +100,7 @@ double	T;
 int		val;
 double	TH_R;				//thermistor resister
 
-int checkTemp(){
+float checkTemp(){
 	val = analogRead(Temp);
 	TH_R	= R1*(1023-val)/val;	//thermistor resister value
 	T		= 1.0/((1.0/T0)+(1.0/B_Value)*log((TH_R/TH25)));

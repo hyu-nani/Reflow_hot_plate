@@ -5,6 +5,14 @@
 #include "ST7735.h"
 #include "LCDbasic.h"
 #include "formation.h"
+#include <stdio.h>
+#include <stdlib.h>
+
+#define warmingTime		90
+#define fluxActiveTime	100	//second
+#define fluxActiveTemp	180	//degree
+#define reflowTime		80	//second
+#define reflowTemp		220	//degree
 
 void setup() {
 	deviceInit();
@@ -20,18 +28,19 @@ void setup() {
 	LCD_image(25,0,136,80,logo);
 	LCD_display_ON();
 	delay(2000);
-	int timeNow = millis(); 
 }
-
+int nowTime = millis();
+int preTime = nowTime;
 int keepTemp = 100;
-int mode = 0;
 
+int mode = 0;
 void loop() {
 	while(mode==0)	//main screen
 	{
 	  mainScreen();
 		while(true)
 		{
+			nowTime = millis();
 			char inputButton = readSW(false);
 			if (inputButton=='L')
 			{
@@ -62,6 +71,7 @@ void loop() {
 				LCD_fill_Rect(1,62,48,17,LGRAY);
 				LCD_fill_Rect(51,62,58,17,BLACK);
 				LCD_fill_Rect(111,62,48,17,LGRAY);
+				mode = 2;
 			}
 			else if(inputButton == 'C')
 			{
@@ -101,12 +111,58 @@ void loop() {
 	while(mode==1)	//soldering start
 	{
 		startScreen();
+		int activeTime =0;
+		int sequence = 1;
+		float nowTemp;
+		preTime = nowTime;
+		digitalWrite(Plate1,HIGH);	//hot plate off
 		while(true)
 		{
-			digitalWrite(Plate1,LOW);
+			nowTime = millis();
+			if(nowTime - preTime >= 1000){ //1 sec
+				activeTime++;
+				preTime = nowTime;
+			}
+			nowTemp = checkTemp();
+			if (activeTime >= 0 && activeTime < warmingTime) //warming time
+			{
+				if (nowTemp < fluxActiveTemp)
+				{
+					digitalWrite(Plate1,LOW);	//hot plate on
+				}
+				else{
+					digitalWrite(Plate1,HIGH);	//hot plate off
+				}
+			}
+			else if (activeTime >= warmingTime && activeTime < (warmingTime+fluxActiveTime))//flux active time
+			{
+				if (nowTemp < fluxActiveTemp)
+				{
+					digitalWrite(Plate1,LOW);	//hot plate on
+				}
+				else{
+					digitalWrite(Plate1,HIGH);	//hot plate off
+				}
+			}
+			else if (activeTime >= (warmingTime+fluxActiveTime) && activeTime < (warmingTime+fluxActiveTime+reflowTime)) //reflow time
+			{
+				if (nowTemp < reflowTemp)
+				{
+					digitalWrite(Plate1,LOW);	//hot plate on
+				}
+				else{
+					digitalWrite(Plate1,HIGH);	//hot plate off
+				}
+			}
+			else{//cooling time
+				digitalWrite(Plate1,HIGH);	//hot plate off
+			}
 			delay(100);
+			char cstr[20] = {'\0'};
+			sprintf(cstr,"%f",nowTemp);
+			LCD_print(5,40,cstr,CYAN,2);
 			char inputButton = readSW(true);
-			if(inputButton=='M')
+			if(inputButton == 'M')
 			{
 				mode = 0;
 			}
@@ -117,30 +173,33 @@ void loop() {
 	}
 	while(mode==2)  //keep to temperature mode
 	{
-    keepScreen();
-    while(true)
-    {
-      char inputButton = readSW();
-      int currentTemp = checkTemp();
-      if(keepTemp < currentTemp-10)
-      {
-        digitalWrite(Plate1,LOW); //on
-        LCD_print(40,40,"HEATER ON",RED,1);
-      }
-      else
-      {
-        digitalWrite(Plate1,HIGH);  //off
-        LCD_print(40,40,"HEATER OFF",RED,1);
-      }
-      if(inputButton == '')
-    }
+		keepScreen();
+		while(true)
+		{
+			char inputButton = readSW(true);
+			int currentTemp = checkTemp();
+			if(keepTemp < currentTemp-10)
+			{
+				digitalWrite(Plate1,LOW); //on
+				LCD_print(40,40,"HEATER ON",RED,1);
+			}
+			else
+			{
+				digitalWrite(Plate1,HIGH);  //off
+				LCD_print(40,40,"HEATER OFF",RED,1);
+			}
+			if(inputButton == 'M')
+				mode = 0;
+			if(mode != 2)
+				break;
+		}
 	}
 	while(mode==3)  //SPISettings
 	{
-	  setScreen();
-	  while(true)
-	  {
-	    delay(10);
-	  }
+		setScreen();
+		while(true)
+		{
+		delay(10);
+		}
 	}
 }
