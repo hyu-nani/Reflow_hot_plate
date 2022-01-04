@@ -312,6 +312,7 @@ void LCD_needle(u16 x,u16 y, u16 w,u16 thin, int value ,u16 color)
 	LCD_Line(x,y,x+S,y-C,thin,color);
 	LCD_CS_Set();
 }
+
 void LCD_dot(u16 x,u16 y, u16 r,u16 thin ,u16 color)
 {
 	LCD_CS_Clr();
@@ -323,6 +324,7 @@ void LCD_dot(u16 x,u16 y, u16 r,u16 thin ,u16 color)
 	}
 	LCD_CS_Set();
 }
+
 void LCD_dot_needle(u16 x,u16 y, u16 w,u16 thin, int value ,u16 color)
 {
 	LCD_CS_Clr();

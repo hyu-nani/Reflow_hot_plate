@@ -7,7 +7,7 @@
 #define SW_M	10
 #define Plate1	4
 #define Plate2	12
-#define Temp	A0	
+#define Temp	A0
 #define SCK		14
 #define MOSI	13
 /*
@@ -88,7 +88,7 @@ char readSW(boolean nonStop){
 float	SensingTempMax	=	250;	//
 float	SensingTempMin	=	-40;	//
 double	TH25			=	100000;	//register of thermistor at 25`
-double	B_Value			=	4014;	//B parameter
+double	B_Value			=	4014	//B parameter
 
 //circuit information
 float	R1		=	100000;	//series register
@@ -101,9 +101,24 @@ int		val;
 double	TH_R;				//thermistor resister
 
 float checkTemp(){
-	val = analogRead(Temp);
+	val		= analogRead(Temp);
 	TH_R	= R1*(1023-val)/val;	//thermistor resister value
 	T		= 1.0/((1.0/T0)+(1.0/B_Value)*log((TH_R/TH25)));
 	C		= T-273.15;
 	return C;
+}
+
+int plateNowTime = millis();
+int platePreTime = plateNowTime;
+
+void activeHotplate(float percentage,int period_ms){
+	plateNowTime = millis();
+	if(plateNowTime <= (percentage/100*period_ms+platePreTime)){
+		digitalWrite(Plate1,LOW);//on
+	}
+	else{
+		digitalWrite(Plate1,HIGH);//off
+	}
+	if(plateNowTime > (period_ms+platePreTime))
+		platePreTime = plateNowTime;
 }
