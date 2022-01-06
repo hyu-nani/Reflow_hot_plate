@@ -85,13 +85,13 @@ char readSW(boolean nonStop){
 /*  TEMPERATURE SENSING CODE                                            */
 /************************************************************************/
 //sensor information
-float	SensingTempMax	=	250;	//
+float	SensingTempMax	=	350;	//
 float	SensingTempMin	=	-40;	//
 double	TH25			=	100000;	//register of thermistor at 25`
-double	B_Value			=	4014;	//B parameter
+double	B_Value			=	4000;	//B parameter
 
 //circuit information
-float	R1		=	100000;	//series register
+float	R1		=	10000;	//series register
 double	T0		=	298.15;	//K	275.15 + 25
 
 float	averageTemp1,averageTemp2,averageTemp3;
