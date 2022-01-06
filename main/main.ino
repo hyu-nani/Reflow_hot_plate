@@ -13,6 +13,9 @@
 #define fluxActiveTemp	200	//degree
 #define reflowTime		100	//second
 #define reflowTemp		230	//degree
+#define PCBLimitTemp	400	//degree
+
+int tempGap	=	0; //pcb <-> hotplate temperature gap
 
 void setup() {
 	deviceInit();
@@ -49,6 +52,7 @@ void loop() {
 				LCD_fill_Rect(1,62,48,17,LGRAY);
 				LCD_fill_Rect(51,62,58,17,BLACK);
 				LCD_fill_Rect(111,62,48,17,BLACK);
+				mode = 3;
 			}
 			else if(inputButton == 'M')
 			{
@@ -61,6 +65,7 @@ void loop() {
 				LCD_fill_Rect(1,62,48,17,BLACK);
 				LCD_fill_Rect(51,62,58,17,BLACK);
 				LCD_fill_Rect(111,62,48,17,LGRAY);
+				mode = 2;
 			}
 			else if(inputButton == 'A')
 			{
@@ -93,9 +98,9 @@ void loop() {
 				LCD_fill_Rect(51,62,58,17,BLACK);
 				LCD_fill_Rect(111,62,48,17,BLACK);
 			}
-			LCD_print(18,66,"<-",WHITE,1);
-			LCD_print(65,66,"Start",WHITE,1);
-			LCD_print(128,66,"->",WHITE,1);
+			LCD_print(18,66,"setting",WHITE,1);
+			LCD_print(65,66,"Soldering",WHITE,1);
+			LCD_print(128,66,"keep temp",WHITE,1);
 			int tempBar = map(checkTemp(),-50,105,2,58);
 			if(tempBar>58)
 			tempBar = 58;
@@ -120,6 +125,7 @@ void loop() {
 		int sequence = 1;
 		float nowTemp;
 		preTime = nowTime;
+		int sequence = 0;
 		digitalWrite(Plate1,HIGH);	//hot plate off
 		while(true)
 		{
@@ -129,54 +135,56 @@ void loop() {
 				preTime = nowTime;
 			}
 			nowTemp = checkTemp();
-			if (activeTime >= 0 && activeTime < warmingTime) //warming time
+			if (activeTime < (warmingTime+fluxActiveTime))//flux active time
 			{
+				sequence = 1;
 				if (nowTemp < 80)
 				{
-					digitalWrite(Plate1,LOW);	//hot plate o
-					delay(100);
+					activeHotplate(30,1000);
 				}
-				else if (nowTemp < fluxActiveTemp-10&& nowTemp>=80)
+				else if (nowTemp < fluxActiveTemp)
 				{
-					activeHotplate(9,1000);
+					activeHotplate(6+(abs(nowTemp-fluxActiveTemp)/10),1000);
 				}
 				else{
-					activeHotplate(4,1000);
-				}
-			}
-			else if (activeTime >= warmingTime && activeTime < (warmingTime+fluxActiveTime))//flux active time
-			{
-				if (nowTemp < fluxActiveTemp-10)
-				{
-					activeHotplate(8,1000);
-				}
-				else{
-					activeHotplate(4,1000);
+					activeHotplate(5,1000);
 				}
 			}
 			else if (activeTime >= (warmingTime+fluxActiveTime) && activeTime < (warmingTime+fluxActiveTime+reflowTime)) //reflow time
 			{
+				sequence = 2;
 				if (nowTemp < reflowTemp-10)
 				{
-					activeHotplate(7,1000);
+					activeHotplate(8+(abs(nowTemp-fluxActiveTemp)/10),1000);
 				}
 				else{
-					activeHotplate(4,1000);
+					activeHotplate(6,1000);
 				}
 			}
 			else{//cooling time
+				sequence = 3;
 				digitalWrite(Plate1,HIGH);	//hot plate off
 			}
-			delay(100);
+			delay(1);
 			char cstr[20] = {'\0'};
-			sprintf(cstr,"%f",nowTemp);
-			LCD_print_background(5,20,activeTime,CYAN,BLACK,1);
+			sprintf(cstr,"%d",nowTemp);
+			LCD_print_background(5, 20,activeTime,CYAN,BLACK,1);
 			LCD_print_background(5, 40, cstr, CYAN,BLACK, 2);
+			if(sequence==1)
+				LCD_print_background(5, 60,"Warming up temperature",RED,BLACK,1);
+			else if(sequence==2)
+				LCD_print_background(5, 60,"Reflow!               ",RED,BLACK,1);
+			else if(sequence==3)
+				LCD_print_background(5, 60,"Cooling               ",RED,BLACK,1);
 			char inputButton = readSW(true);
 			if(inputButton == 'M')
 				mode = 0;
 			if(mode!=1)
 				break;
+			else if(activeTime >= warmingTime+reflowTime+fluxActiveTime+100){
+				mode = 0;
+				break;
+			}
 		}
 		
 	}

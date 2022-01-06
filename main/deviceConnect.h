@@ -88,7 +88,7 @@ char readSW(boolean nonStop){
 float	SensingTempMax	=	250;	//
 float	SensingTempMin	=	-40;	//
 double	TH25			=	100000;	//register of thermistor at 25`
-double	B_Value			=	4014	//B parameter
+double	B_Value			=	4014;	//B parameter
 
 //circuit information
 float	R1		=	100000;	//series register
@@ -108,8 +108,8 @@ float checkTemp(){
 	return C;
 }
 
-int plateNowTime = millis();
-int platePreTime = plateNowTime;
+long plateNowTime = millis();
+long platePreTime = plateNowTime;
 
 void activeHotplate(float percentage,int period_ms){
 	plateNowTime = millis();
@@ -119,6 +119,6 @@ void activeHotplate(float percentage,int period_ms){
 	else{
 		digitalWrite(Plate1,HIGH);//off
 	}
-	if(plateNowTime > (period_ms+platePreTime))
+	if(plateNowTime >= (period_ms + platePreTime))
 		platePreTime = plateNowTime;
 }

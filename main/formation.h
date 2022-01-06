@@ -5,7 +5,6 @@ void mainScreen()
 	LCD_Fill(BLACK);
 	LCD_print(10,0,"ReFlow",CYAN,2);
 	LCD_print(10,20,"Soldering",CYAN,2);
-	LCD_print(10,40,"System V1.0",CYAN,2);
 	LCD_Rect(150,0,10,60,RED);
 	LCD_Rect(0,61,50,19,WHITE);
 	LCD_Rect(50,61,60,19,WHITE);
