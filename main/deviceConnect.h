@@ -51,6 +51,9 @@ char readSW(boolean nonStop){
 			while (digitalRead(SW_M)){delay(10);}
 			while (digitalRead(SW_R)){delay(10);}
 		}
+		else{
+			delay(50);
+		}
 		switch (i)
 		{
 			case 1:
@@ -86,9 +89,9 @@ char readSW(boolean nonStop){
 /************************************************************************/
 //sensor information
 float	SensingTempMax	=	350;	//
-float	SensingTempMin	=	-40;	//
+float	SensingTempMin	=	-50;	//
 double	TH25			=	100000;	//register of thermistor at 25`
-double	B_Value			=	4000;	//B parameter
+double	B_Value			=	3470;	//B parameter
 
 //circuit information
 float	R1		=	10000;	//series register

@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int warmingTime		=	100;
-int fluxActiveTime	=	120;	//second
+int warmingTime		=	120;
+int fluxActiveTime	=	200;	//second
 int reflowTime		=	150;	//second
 int coolTime		=	200;
 int allTime			=	warmingTime+fluxActiveTime+reflowTime+coolTime;
@@ -13,7 +13,7 @@ int warmingTemp		=	100;	//degree
 int fluxActiveTemp	=	160;	//degree
 int reflowTemp		=	220;	//degree
 
-#define PCBLimitTemp	350	//degree
+#define PCBLimitTemp	400	//degree
 
 int		tempGap		=	-10; //pcb - hotplate temperature gap
 int		activeTime	=	0;
@@ -47,9 +47,11 @@ void setup() {
 }
 
 void loop() {
+	initialCommand = true;
 	while(mode==0)	//main screen
 	{ 
 		LCD_Fill(BLACK);
+		mainScreen();
 		while(true)
 		{
 			nowTime = millis();
@@ -120,19 +122,20 @@ void loop() {
 			LCD_Line(151,tempBar+2,158,tempBar+2,1,BLACK);
 			delay(1);
 			char cstr[20] = {'\0'};
-			sprintf(cstr,"%1f",nowTemp);
+			sprintf(cstr,"%0.2lf",nowTemp);
 			LCD_print_background(5, 40, cstr, RED,BLACK, 2);
 			if(mode!=0)
 				break;
 			digitalWrite(Plate1,HIGH);
-			mainScreen();
 		}
 	}
 	while(mode==1)	//soldering start
 	{
 		preTime = nowTime;
 		sequence = 0;
+		activeTime = 0;
 		digitalWrite(Plate1,HIGH);	//hot plate off
+		LCD_Fill(BLACK);
 		while(true)
 		{
 			nowTime = millis();
@@ -146,10 +149,10 @@ void loop() {
 				sequence = 0;
 				if (nowTemp+tempGap*(warmingTime-activeTime)/warmingTime < warmingTemp)
 				{
-					activeHotplate(13+(abs(nowTemp-warmingTemp)/5),1000);
+					activeHotplate(20+(abs(nowTemp-warmingTemp)/5),1000);
 				}
 				else{
-					activeHotplate(6,1000);
+					activeHotplate(10,1000);
 				}
 			}
 			else if (activeTime < (warmingTime+fluxActiveTime))//flux active time
@@ -157,7 +160,7 @@ void loop() {
 				sequence = 1;
 				if ((nowTemp+tempGap*(fluxActiveTime+warmingTime-activeTime)/(warmingTime+fluxActiveTime)) < fluxActiveTemp)
 				{
-					activeHotplate(15+(abs(nowTemp-fluxActiveTemp)/5),1000);
+					activeHotplate(18+(abs(nowTemp-fluxActiveTemp)/3),1000);
 				}
 				else{
 					activeHotplate(10,1000);
@@ -168,7 +171,7 @@ void loop() {
 				sequence = 2;
 				if ((nowTemp+tempGap*(warmingTime+fluxActiveTime+reflowTime-activeTime)/(warmingTime+fluxActiveTime+reflowTime)) < reflowTemp)
 				{
-					activeHotplate(15+(abs(nowTemp-reflowTemp)/5),1000);
+					activeHotplate(20+(abs(nowTemp-reflowTemp)/5),1000);
 				}
 				else{
 					activeHotplate(10,1000);
@@ -179,12 +182,13 @@ void loop() {
 				digitalWrite(Plate1,HIGH);	//hot plate off
 			}
 			solderingLoopScreen();
+			delay(0.01);
 			char inputButton = readSW(true);
 			if(inputButton == 'M')
 				mode = 0;
 			if(mode!=1)
 				break;
-			else if(activeTime >= warmingTime+reflowTime+fluxActiveTime+100 && nowTemp < 80){
+			else if(activeTime >= warmingTime+reflowTime+fluxActiveTime+100 && nowTemp < 50){
 				mode = 0;
 				break;
 			}
@@ -194,26 +198,27 @@ void loop() {
 	while(mode==2)  //keep to temperature mode
 	{
 		keepScreen();
-		int onTime = 100;
 		while(true)
 		{
 			char inputButton = readSW(true);
 			float nowTemp = checkTemp();
-			if(nowTemp<250)
+			if(nowTemp<=keepTemp)
 			{
-				activeHotplate(onTime/10,1000);
-				LCD_print_background(40,20,"HEATER ON",RED,BLACK,1);
+				activeHotplate(20+(abs(nowTemp-keepTemp)/5),1000);
+				LCD_print_background(20,20,"HEATER ON:",RED,BLACK,1);
+				LCD_print_background(50,20,(20+(abs(nowTemp-keepTemp)/5)),RED,BLACK,1);
 			}
 			else
 			{
-				activeHotplate(onTime/10-10,1000);
-				LCD_print_background(40,20,"HEATER OFF",RED,BLACK,1);
+				activeHotplate(15,1000);
+				LCD_print_background(40,20,"HEATER 15",RED,BLACK,1);
 			}
 			delay(5);
-			char cstr[20] = {'\0'};
-			sprintf(cstr,"%f",nowTemp);
-			LCD_print_background(5, 40, cstr, CYAN,BLACK, 2);
-			LCD_print_background(5,60,onTime,RED,BLACK,1);
+			char cstr[10] = {'\0'};
+			sprintf(cstr,"%0.2lf",nowTemp);
+			LCD_print_background(5,30,"Seting temp :",GREEN,BLACK,1);
+			LCD_print_background(70,30,keepTemp,GREEN,BLACK,1);
+			LCD_print_background(5,40, cstr, CYAN,BLACK, 2);
 			if(inputButton == 'M')
 				mode = 0;
 			if(inputButton == 'L')
@@ -226,10 +231,11 @@ void loop() {
 	}
 	while(mode==3)  //SPISettings
 	{
-		setScreen();
 		while(true)
 		{
 			delay(10);
+			setScreen();
+			
 		}
 	}
 }
