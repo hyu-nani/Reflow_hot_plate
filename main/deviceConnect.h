@@ -5,8 +5,7 @@
 #define SW_L	16	
 #define SW_R	9	
 #define SW_M	10
-#define Plate1	4
-#define Plate2	12
+#define Plate	4
 #define Temp	A0
 #define SCK		14
 #define MOSI	13
@@ -31,11 +30,9 @@ void deviceInit(){
 	pinMode(SW_L,INPUT);
 	pinMode(SW_M,INPUT);
 	pinMode(SW_R,INPUT);
-	pinMode(Plate1,OUTPUT);
-	pinMode(Plate2,OUTPUT);
+	pinMode(Plate,OUTPUT);
 	pinMode(Temp,INPUT);
-	digitalWrite(Plate1,HIGH);
-	digitalWrite(Plate2,HIGH);
+	digitalWrite(Plate,LOW);
 }
 
 char readSW(boolean nonStop){
@@ -113,15 +110,16 @@ float checkTemp(){
 
 long plateNowTime = millis();
 long platePreTime = plateNowTime;
-
+int flipCount = 0;
 void activeHotplate(float percentage,int period_ms){
 	plateNowTime = millis();
 	if(plateNowTime <= (percentage/100*period_ms+platePreTime)){
-		digitalWrite(Plate1,LOW);//on
+		digitalWrite(Plate,HIGH);//on
 	}
 	else{
-		digitalWrite(Plate1,HIGH);//off
+		digitalWrite(Plate,LOW);//off
 	}
-	if(plateNowTime >= (period_ms + platePreTime))
+	if(plateNowTime >= (period_ms + platePreTime)){
 		platePreTime = plateNowTime;
+	}
 }

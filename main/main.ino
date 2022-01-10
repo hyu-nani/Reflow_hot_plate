@@ -3,17 +3,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int warmingTime		=	120;
-int fluxActiveTime	=	200;	//second
-int reflowTime		=	150;	//second
-int coolTime		=	200;
+int warmingTime		=	140;
+int fluxActiveTime	=	180;	//second
+int reflowTime		=	100;	//second
+int coolTime		=	250;
 int allTime			=	warmingTime+fluxActiveTime+reflowTime+coolTime;
 
-int warmingTemp		=	100;	//degree
-int fluxActiveTemp	=	160;	//degree
-int reflowTemp		=	220;	//degree
+int warmingTemp		=	120;	//degree
+int fluxActiveTemp	=	170;	//degree
+int reflowTemp		=	230;	//degree
 
 #define PCBLimitTemp	400	//degree
+
+int		cursor		=	0;
+int		page		=	0;
 
 int		tempGap		=	-10; //pcb - hotplate temperature gap
 int		activeTime	=	0;
@@ -24,6 +27,27 @@ int		preTime		=	nowTime;
 int		keepTemp	=	100;
 int		mode		=	0;
 
+int setValue[20] = {
+	warmingTime,
+	fluxActiveTime,
+	reflowTime,
+	coolTime,
+	warmingTemp,
+	fluxActiveTemp,
+	reflowTemp,
+	tempGap,
+	keepTemp,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0
+};
+
 #include "deviceConnect.h"
 #include "ST7735.h"
 #include "LCDbasic.h"
@@ -31,11 +55,11 @@ int		mode		=	0;
 
 void setup() {
 	deviceInit();
-	pinMode(LED_BUILTIN, OUTPUT);
-	digitalWrite(LED_BUILTIN, LOW);
 	SPIClass(HSPI);
 	SPI.begin();		//SPI begin
 	mySPISettings = SPISettings(40000000, MSBFIRST, SPI_MODE0); //ESP speed /4
+	pinMode(LED_BUILTIN, OUTPUT);
+	digitalWrite(LED_BUILTIN, LOW);
 	LCD_Init();
 	LCD_Fill(BLACK);
 	LCD_display_OFF();
@@ -47,9 +71,9 @@ void setup() {
 }
 
 void loop() {
-	initialCommand = true;
 	while(mode==0)	//main screen
 	{ 
+		initialCommand = true;
 		LCD_Fill(BLACK);
 		mainScreen();
 		while(true)
@@ -110,7 +134,7 @@ void loop() {
 			}
 			LCD_print(5,66,"Setting",WHITE,1);
 			LCD_print(53,66,"Soldering",WHITE,1);
-			LCD_print(112,66,"Keeptemp",WHITE,1);
+			LCD_print(112,66,"keeptemp",WHITE,1);
 			int tempBar = map(nowTemp,0,305,56,2);
 			if(tempBar>58)
 			tempBar = 58;
@@ -123,10 +147,10 @@ void loop() {
 			delay(1);
 			char cstr[20] = {'\0'};
 			sprintf(cstr,"%0.2lf",nowTemp);
-			LCD_print_background(5, 40, cstr, RED,BLACK, 2);
+			LCD_print_background(110, 10, cstr, GREEN,BLACK, 1);
 			if(mode!=0)
 				break;
-			digitalWrite(Plate1,HIGH);
+			digitalWrite(Plate,LOW);
 		}
 	}
 	while(mode==1)	//soldering start
@@ -134,7 +158,7 @@ void loop() {
 		preTime = nowTime;
 		sequence = 0;
 		activeTime = 0;
-		digitalWrite(Plate1,HIGH);	//hot plate off
+		digitalWrite(Plate,LOW);	//hot plate off
 		LCD_Fill(BLACK);
 		while(true)
 		{
@@ -144,42 +168,45 @@ void loop() {
 				preTime = nowTime;
 			}
 			nowTemp = checkTemp();
+			if (nowTemp > 320){
+				digitalWrite(Plate,LOW);
+			}
 			if (activeTime < warmingTime)
 			{
 				sequence = 0;
-				if (nowTemp+tempGap*(warmingTime-activeTime)/warmingTime < warmingTemp)
+				if (nowTemp+setValue[7]*(warmingTime-activeTime)/warmingTime < warmingTemp)
 				{
-					activeHotplate(20+(abs(nowTemp-warmingTemp)/5),1000);
+					activeHotplate(15+(abs(nowTemp-warmingTemp)/5),1000);
 				}
 				else{
-					activeHotplate(10,1000);
+					activeHotplate(7,1000);
 				}
 			}
 			else if (activeTime < (warmingTime+fluxActiveTime))//flux active time
 			{
 				sequence = 1;
-				if ((nowTemp+tempGap*(fluxActiveTime+warmingTime-activeTime)/(warmingTime+fluxActiveTime)) < fluxActiveTemp)
+				if ((nowTemp+setValue[7]*(fluxActiveTime+warmingTime-activeTime)/(warmingTime+fluxActiveTime)) < fluxActiveTemp)
 				{
-					activeHotplate(18+(abs(nowTemp-fluxActiveTemp)/3),1000);
+					activeHotplate(15+(abs(nowTemp-fluxActiveTemp)/5),1000);
 				}
 				else{
-					activeHotplate(10,1000);
+					activeHotplate(9,1000);
 				}
 			}
 			else if (activeTime < (warmingTime+fluxActiveTime+reflowTime)) //reflow time
 			{
 				sequence = 2;
-				if ((nowTemp+tempGap*(warmingTime+fluxActiveTime+reflowTime-activeTime)/(warmingTime+fluxActiveTime+reflowTime)) < reflowTemp)
+				if ((nowTemp+setValue[7]*(warmingTime+fluxActiveTime+reflowTime-activeTime)/(warmingTime+fluxActiveTime+reflowTime)) < reflowTemp)
 				{
-					activeHotplate(20+(abs(nowTemp-reflowTemp)/5),1000);
+					activeHotplate(15+(abs(nowTemp-reflowTemp)/5),1000);
 				}
 				else{
-					activeHotplate(10,1000);
+					activeHotplate(9,1000);
 				}
 			}
 			else{//cooling time
 				sequence = 3;
-				digitalWrite(Plate1,HIGH);	//hot plate off
+				digitalWrite(Plate,LOW);	//hot plate off
 			}
 			solderingLoopScreen();
 			delay(0.01);
@@ -188,7 +215,7 @@ void loop() {
 				mode = 0;
 			if(mode!=1)
 				break;
-			else if(activeTime >= warmingTime+reflowTime+fluxActiveTime+100 && nowTemp < 50){
+			else if(activeTime >= 1000 && nowTemp < 50){
 				mode = 0;
 				break;
 			}
@@ -200,42 +227,103 @@ void loop() {
 		keepScreen();
 		while(true)
 		{
-			char inputButton = readSW(true);
+			char inputButton = readSW(false);
 			float nowTemp = checkTemp();
-			if(nowTemp<=keepTemp)
+			if(nowTemp<=setValue[8])
 			{
-				activeHotplate(20+(abs(nowTemp-keepTemp)/5),1000);
-				LCD_print_background(20,20,"HEATER ON:",RED,BLACK,1);
-				LCD_print_background(50,20,(20+(abs(nowTemp-keepTemp)/5)),RED,BLACK,1);
+				activeHotplate(15+(abs(nowTemp-setValue[8])/5),2000);
+				LCD_print_background(40,20,"HEATER ON:",RED,BLACK,1);
+				LCD_print_background(100,20,(20+(abs(nowTemp-setValue[8])/5)),RED,BLACK,1);
 			}
 			else
 			{
-				activeHotplate(15,1000);
-				LCD_print_background(40,20,"HEATER 15",RED,BLACK,1);
+				activeHotplate(8,2000);
+				LCD_print_background(40,20,"HEATER LOW       ",RED,BLACK,1);
 			}
 			delay(5);
 			char cstr[10] = {'\0'};
 			sprintf(cstr,"%0.2lf",nowTemp);
-			LCD_print_background(5,30,"Seting temp :",GREEN,BLACK,1);
-			LCD_print_background(70,30,keepTemp,GREEN,BLACK,1);
-			LCD_print_background(5,40, cstr, CYAN,BLACK, 2);
-			if(inputButton == 'M')
-				mode = 0;
-			if(inputButton == 'L')
-				onTime+=10;
-			if (inputButton=='R')
-				onTime-=10;
+			LCD_print_background(20,30,"Setting temp :",GREEN,BLACK,1);
+			LCD_print_background(110,30,setValue[8],GREEN,BLACK,1);
+			LCD_print_background(40,40, cstr, CYAN,BLACK, 2);
 			if(mode != 2)
 				break;
+			if (inputButton == 'R')
+				setValue[8]--;
+			else if(inputButton== 'L')
+				setValue[8]++;
+			else if(inputButton== 'M')
+				mode=0;
 		}
 	}
 	while(mode==3)  //SPISettings
 	{
+		LCD_Fill(BLACK);
+		cursor=0;
+		page=0;
 		while(true)
 		{
-			delay(10);
+			delay(1);
 			setScreen();
-			
+			LCD_print(1,10+cursor*10,">",CYAN,1);
+			int inputButton = readSW(true);
+			if (inputButton == 'L'){
+				cursor++;
+				if(page<2 && cursor == 7){
+					page++;
+					LCD_print(1,cursor*10,">",BLACK,1);
+					cursor = 0;
+					initialCommand = true;
+				}
+				LCD_print(1,cursor*10,">",BLACK,1);
+			}
+			else if(inputButton == 'R'){
+				if(page > 0	&& cursor==0){
+					page--;
+					LCD_print(1,20+cursor*10,">",BLACK,1);
+					cursor=7;
+					initialCommand = true;
+				}
+				if(cursor>0)
+				cursor--;
+				LCD_print(1,20+cursor*10,">",BLACK,1);
+			}
+			//
+			if(inputButton=='M'&&cursor==2&&page==1){
+				allTime			=	warmingTime+fluxActiveTime+reflowTime+coolTime;
+				mode = 0;
+				break;
+			}
+			else if(inputButton=='M'){
+				inputButton = 'n';
+				LCD_print_background(1,(10+10*cursor),setMenu[cursor+page*7],YELLOW,BLACK,1);
+				LCD_print_background(125,(10+10*cursor),setValue[cursor+page*7],YELLOW,BLACK,1);
+				LCD_print_background(118,(10+10*cursor),"+",YELLOW,BLACK,1);
+				LCD_print_background(145,(10+10*cursor),"-",YELLOW,BLACK,1);
+				delay(100);
+				while(true){
+					inputButton = readSW(false);
+					if(inputButton=='M'){
+						LCD_print_background(1,(10+10*cursor),setMenu[cursor+page*7],WHITE,BLACK,1);
+						LCD_print_background(125,(10+10*cursor),setValue[cursor+page*7],WHITE,BLACK,1);
+						LCD_print_background(118,(10+10*cursor),"+",BLACK,BLACK,1);
+						LCD_print_background(145,(10+10*cursor),"-",BLACK,BLACK,1);
+						delay(100);
+						break;
+					}
+					else if(inputButton=='L'){
+						setValue[cursor+page*7]++;
+						LCD_fill_Rect(125,(10+10*cursor),18,8,BLACK);
+						LCD_print_background(125,(10+10*cursor),setValue[cursor+page*7],YELLOW,BLACK,1);
+					}
+					else if(inputButton=='R'){
+						setValue[cursor+page*7]--;
+						LCD_fill_Rect(125,(10+10*cursor),18,8,BLACK);
+						LCD_print_background(125,(10+10*cursor),setValue[cursor+page*7],YELLOW,BLACK,1);
+					}
+					delay(10);
+				}
+			}
 		}
 	}
 }
