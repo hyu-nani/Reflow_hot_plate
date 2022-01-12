@@ -4,28 +4,31 @@
 #include <stdlib.h>
 #include <EEPROM.h>
 
-int warmingTime		=	140;
-int	fluxActiveTime	=	180;	//second
-int reflowTime		=	100;	//second
-int coolTime		=	250;
+int warmingTime		=	100;
+int	fluxActiveTime	=	160;	//second
+int reflowTime		=	80;	//second
+int coolTime		=	200;
 
-int warmingTemp		=	120;	//degree
-int fluxActiveTemp	=	170;	//degree
-int reflowTemp		=	230;	//degree
+int warmingTemp		=	130;	//degree
+int fluxActiveTemp	=	180;	//degree
+int reflowTemp		=	255;	//degree
+int divideTemp		=	80;
+int basicAddTime	=	7;
 
 #define PCBLimitTemp	400	//degree
 
 int		cursor		=	0;
 int		page		=	0;
 
-int		tempGap		=	-10; //pcb - hotplate temperature gap
+int		tempGap		=	-5; //pcb - hotplate temperature gap
 int		activeTime	=	0;
 float	nowTemp;
 int		sequence	=	0;
 int		nowTime		=	millis();
 int		preTime		=	nowTime;
-int		keepaTemp	=	100;
+int		keepTemp	=	100;
 int		pageMode	=	0;
+
 
 int setValue[20] = {
 	warmingTime,
@@ -35,9 +38,9 @@ int setValue[20] = {
 	warmingTemp,
 	fluxActiveTemp,
 	reflowTemp,
-	tempGap,
-	keepaTemp,
-	0,
+	divideTemp,
+	keepTemp,
+	basicAddTime,
 	0,
 	0,
 	0,
@@ -139,7 +142,7 @@ void loop() {
 			LCD_print(5,66,"Setting",WHITE,1);
 			LCD_print(53,66,"Soldering",WHITE,1);
 			LCD_print(112,66,"keepTemp",WHITE,1);
-			int tempBar = map(nowTemp,0,305,56,2);
+			int tempBar = map(nowTemp,0,300,56,2);
 			if(tempBar>58)
 			tempBar = 58;
 			else if(tempBar<2)
@@ -164,6 +167,7 @@ void loop() {
 		activeTime = 0;
 		digitalWrite(Plate,LOW);	//hot plate off
 		LCD_Fill(BLACK);
+		float add;
 		while(true)
 		{
 			nowTime = millis();
@@ -178,47 +182,59 @@ void loop() {
 			if (activeTime < setValue[0])
 			{
 				sequence = 0;
-				if (nowTemp+setValue[7]*(setValue[0]-activeTime)/setValue[0] < setValue[4])
-				{
-					activeHotplate(15+(abs(nowTemp-setValue[4])/5),1000);
-				}
-				else{
-					activeHotplate(7,1000);
-				}
+				if(setValue[4]-nowTemp >= 0)
+					add = pow((setValue[4]-nowTemp)/(setValue[7]/10),2);
+				else
+					add = -pow((setValue[4]-nowTemp)/(setValue[7]/10),2);
+				add = add+basicAddTime;
+				if(add>25)
+					add=25;
+				if(add<-25)
+					add=-25;
+				activeHotplate(add,1000);
 			}
 			else if (activeTime < (setValue[0]+setValue[1]))//flux active time
 			{
 				sequence = 1;
-				if ((nowTemp+setValue[7]*(setValue[1]+setValue[0]-activeTime)/(setValue[0]+setValue[1])) < setValue[5])
-				{
-					activeHotplate(15+(abs(nowTemp-setValue[5])/5),1000);
-				}
-				else{
-					activeHotplate(9,1000);
-				}
+				if(setValue[5]-nowTemp >= 0)
+					add = pow((setValue[5]-nowTemp)/(setValue[7]/10),2);
+				else
+					add = -pow((setValue[5]-nowTemp)/(setValue[7]/10),2);
+				add = add+basicAddTime;
+				if(add>25)
+					add=25;
+				if(add<-25)
+					add=-25;
+				activeHotplate(add,1000);
 			}
 			else if (activeTime < (setValue[0]+setValue[1]+setValue[2])) //reflow time
 			{
 				sequence = 2;
-				if ((nowTemp+setValue[7]*(setValue[0]+setValue[1]+setValue[2]-activeTime)/(setValue[0]+setValue[1]+setValue[2])) < setValue[6])
-				{
-					activeHotplate(15+(abs(nowTemp-setValue[6])/5),1000);
-				}
-				else{
-					activeHotplate(9,1000);
-				}
+				if(setValue[6]-nowTemp >= 0)
+					add = pow((setValue[6]-nowTemp)/(setValue[7]/10),2);
+				else
+					add = -pow((setValue[6]-nowTemp)/(setValue[7]/10),2);
+				add = add+basicAddTime;
+				if(add>25)
+					add=25;
+				if(add<-25)
+					add=-25;
+				activeHotplate(add,1000);
 			}
 			else{//cooling time
 				sequence = 3;
 				digitalWrite(Plate,LOW);	//hot plate off
 			}
 			solderingLoopScreen();
-			delay(0.01);
+			delay(0.001);
 			char inputButton = readSW(true);
 			if(inputButton == 'M')
 				pageMode = 0;
-			if(pageMode!=1)
+			if(pageMode!=1 || nowTemp > 300){
+				digitalWrite(Plate,LOW);
+				pageMode = 0;
 				break;
+			}
 			else if(activeTime >= 1000 && nowTemp < 50){
 				pageMode = 0;
 				break;
@@ -294,7 +310,7 @@ void loop() {
 				LCD_print(1,20+cursor*10,">",BLACK,1);
 			}
 			//
-			if(inputButton=='M'&&cursor==2&&page==1){
+			if(inputButton=='M'&&cursor==3&&page==1){
 				eepromDataSave();
 				allTime			=	setValue[0]+setValue[1]+setValue[2]+setValue[3];
 				pageMode = 0;

@@ -80,9 +80,10 @@ void solderingLoopScreen()
 	int tempSpot = map(nowTemp,0,SensingTempMax,graphEndY-1,graphStaY+1);
 	int timeSpot = map(activeTime,0,allTime,graphStaX+2,graphEndX-2);
 	if(timeSpot>=graphStaX+2 && timeSpot<=graphEndX-2){
-		LCD_Pixel(timeSpot,tempSpot,1,LIGHTGREEN);
 		LCD_Pixel(timeSpot,tempSpot+1,1,BLACK);
-		LCD_Pixel(timeSpot,tempSpot-1,1,BLACK);
+		LCD_Pixel(timeSpot,tempSpot,1,LIGHTGREEN);
+		LCD_Pixel(timeSpot,tempSpot-1,1,LIGHTGREEN);
+		LCD_Pixel(timeSpot,tempSpot-2,1,BLACK);
 	}
 }
 void keepScreen()
@@ -103,8 +104,9 @@ char setMenu[20][20] = {
 	"  Warming up temp ",
 	"  Flux active temp",
 	"  Reflow temp     ",
-	"  Temp Gap        ",
+	"  add time divide ",
 	"  Keep mode temp  ",
+	"  Basic add time  ",
 	" >Home>>>>>>>>>>>>",
 	"                  ",
 	"                  ",
@@ -119,8 +121,10 @@ void setScreen()
 		LCD_print_background(0,0,"SETTING MENU",CYAN,BLACK,1);
 		for(int col = 0; col < 7; col++){
 			LCD_print_background(1,(10+10*col),setMenu[col+page*7],WHITE,BLACK,1);
-			if(setValue[col+page*7]!=0)
+			if(setValue[col+page*7]!=0){
+				LCD_fill_Rect(125,(10+10*col),18,8,BLACK);
 				LCD_print_background(125,(10+10*col),setValue[col+page*7],WHITE,BLACK,1);
+			}
 			else
 				LCD_fill_Rect(125,(10+10*col),18,8,BLACK);
 		}

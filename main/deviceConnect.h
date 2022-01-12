@@ -113,7 +113,7 @@ long platePreTime = plateNowTime;
 int flipCount = 0;
 void activeHotplate(float percentage,int period_ms){
 	plateNowTime = millis();
-	if(plateNowTime <= (percentage/100*period_ms+platePreTime)){
+	if(plateNowTime <= ((percentage/100*period_ms)+platePreTime)){
 		digitalWrite(Plate,HIGH);//on
 	}
 	else{
