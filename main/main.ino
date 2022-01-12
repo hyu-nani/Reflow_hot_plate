@@ -2,12 +2,12 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <EEPROM.h>
 
 int warmingTime		=	140;
-int fluxActiveTime	=	180;	//second
+int	fluxActiveTime	=	180;	//second
 int reflowTime		=	100;	//second
 int coolTime		=	250;
-int allTime			=	warmingTime+fluxActiveTime+reflowTime+coolTime;
 
 int warmingTemp		=	120;	//degree
 int fluxActiveTemp	=	170;	//degree
@@ -24,8 +24,8 @@ float	nowTemp;
 int		sequence	=	0;
 int		nowTime		=	millis();
 int		preTime		=	nowTime;
-int		keepTemp	=	100;
-int		mode		=	0;
+int		keepaTemp	=	100;
+int		pageMode	=	0;
 
 int setValue[20] = {
 	warmingTime,
@@ -36,7 +36,7 @@ int setValue[20] = {
 	fluxActiveTemp,
 	reflowTemp,
 	tempGap,
-	keepTemp,
+	keepaTemp,
 	0,
 	0,
 	0,
@@ -47,17 +47,20 @@ int setValue[20] = {
 	0,
 	0
 };
+int allTime			=	setValue[0]+setValue[1]+setValue[2]+setValue[3];
 
 #include "deviceConnect.h"
 #include "ST7735.h"
 #include "LCDbasic.h"
 #include "formation.h"
+#include "eepromList.h"
 
 void setup() {
 	deviceInit();
 	SPIClass(HSPI);
 	SPI.begin();		//SPI begin
 	mySPISettings = SPISettings(40000000, MSBFIRST, SPI_MODE0); //ESP speed /4
+	EEPROM.begin(20);
 	pinMode(LED_BUILTIN, OUTPUT);
 	digitalWrite(LED_BUILTIN, LOW);
 	LCD_Init();
@@ -66,12 +69,13 @@ void setup() {
 	LCD_Fill(WHITE);
 	LCD_image(25,0,136,80,logo);
 	LCD_display_ON();
-	Serial.println("start");
 	delay(2000);
+	//eepromDataSave();
+	eepromDataLoad();
 }
 
 void loop() {
-	while(mode==0)	//main screen
+	while(pageMode==0)	//main screen
 	{ 
 		initialCommand = true;
 		LCD_Fill(BLACK);
@@ -86,20 +90,20 @@ void loop() {
 				LCD_fill_Rect(1,62,48,17,LGRAY);
 				LCD_fill_Rect(51,62,58,17,BLACK);
 				LCD_fill_Rect(111,62,48,17,BLACK);
-				mode = 3;
+				pageMode = 3;
 			}
 			else if(inputButton == 'M')
 			{
 				LCD_fill_Rect(1,62,48,17,BLACK);
 				LCD_fill_Rect(51,62,58,17,LGRAY);
 				LCD_fill_Rect(111,62,48,17,BLACK);
-				mode = 1;
+				pageMode = 1;
 			}
 			else if(inputButton == 'R'){
 				LCD_fill_Rect(1,62,48,17,BLACK);
 				LCD_fill_Rect(51,62,58,17,BLACK);
 				LCD_fill_Rect(111,62,48,17,LGRAY);
-				mode = 2;
+				pageMode = 2;
 			}
 			else if(inputButton == 'A')
 			{
@@ -112,7 +116,7 @@ void loop() {
 				LCD_fill_Rect(1,62,48,17,LGRAY);
 				LCD_fill_Rect(51,62,58,17,BLACK);
 				LCD_fill_Rect(111,62,48,17,LGRAY);
-				mode = 2;
+				pageMode = 2;
 			}
 			else if(inputButton == 'C')
 			{
@@ -134,7 +138,7 @@ void loop() {
 			}
 			LCD_print(5,66,"Setting",WHITE,1);
 			LCD_print(53,66,"Soldering",WHITE,1);
-			LCD_print(112,66,"keeptemp",WHITE,1);
+			LCD_print(112,66,"keepTemp",WHITE,1);
 			int tempBar = map(nowTemp,0,305,56,2);
 			if(tempBar>58)
 			tempBar = 58;
@@ -148,12 +152,12 @@ void loop() {
 			char cstr[20] = {'\0'};
 			sprintf(cstr,"%0.2lf",nowTemp);
 			LCD_print_background(110, 10, cstr, GREEN,BLACK, 1);
-			if(mode!=0)
+			if(pageMode!=0)
 				break;
 			digitalWrite(Plate,LOW);
 		}
 	}
-	while(mode==1)	//soldering start
+	while(pageMode==1)	//soldering start
 	{
 		preTime = nowTime;
 		sequence = 0;
@@ -171,34 +175,34 @@ void loop() {
 			if (nowTemp > 320){
 				digitalWrite(Plate,LOW);
 			}
-			if (activeTime < warmingTime)
+			if (activeTime < setValue[0])
 			{
 				sequence = 0;
-				if (nowTemp+setValue[7]*(warmingTime-activeTime)/warmingTime < warmingTemp)
+				if (nowTemp+setValue[7]*(setValue[0]-activeTime)/setValue[0] < setValue[4])
 				{
-					activeHotplate(15+(abs(nowTemp-warmingTemp)/5),1000);
+					activeHotplate(15+(abs(nowTemp-setValue[4])/5),1000);
 				}
 				else{
 					activeHotplate(7,1000);
 				}
 			}
-			else if (activeTime < (warmingTime+fluxActiveTime))//flux active time
+			else if (activeTime < (setValue[0]+setValue[1]))//flux active time
 			{
 				sequence = 1;
-				if ((nowTemp+setValue[7]*(fluxActiveTime+warmingTime-activeTime)/(warmingTime+fluxActiveTime)) < fluxActiveTemp)
+				if ((nowTemp+setValue[7]*(setValue[1]+setValue[0]-activeTime)/(setValue[0]+setValue[1])) < setValue[5])
 				{
-					activeHotplate(15+(abs(nowTemp-fluxActiveTemp)/5),1000);
+					activeHotplate(15+(abs(nowTemp-setValue[5])/5),1000);
 				}
 				else{
 					activeHotplate(9,1000);
 				}
 			}
-			else if (activeTime < (warmingTime+fluxActiveTime+reflowTime)) //reflow time
+			else if (activeTime < (setValue[0]+setValue[1]+setValue[2])) //reflow time
 			{
 				sequence = 2;
-				if ((nowTemp+setValue[7]*(warmingTime+fluxActiveTime+reflowTime-activeTime)/(warmingTime+fluxActiveTime+reflowTime)) < reflowTemp)
+				if ((nowTemp+setValue[7]*(setValue[0]+setValue[1]+setValue[2]-activeTime)/(setValue[0]+setValue[1]+setValue[2])) < setValue[6])
 				{
-					activeHotplate(15+(abs(nowTemp-reflowTemp)/5),1000);
+					activeHotplate(15+(abs(nowTemp-setValue[6])/5),1000);
 				}
 				else{
 					activeHotplate(9,1000);
@@ -212,17 +216,17 @@ void loop() {
 			delay(0.01);
 			char inputButton = readSW(true);
 			if(inputButton == 'M')
-				mode = 0;
-			if(mode!=1)
+				pageMode = 0;
+			if(pageMode!=1)
 				break;
 			else if(activeTime >= 1000 && nowTemp < 50){
-				mode = 0;
+				pageMode = 0;
 				break;
 			}
 		}
 		
 	}
-	while(mode==2)  //keep to temperature mode
+	while(pageMode==2)  //keep to temperature pageMode
 	{
 		keepScreen();
 		while(true)
@@ -246,18 +250,19 @@ void loop() {
 			LCD_print_background(20,30,"Setting temp :",GREEN,BLACK,1);
 			LCD_print_background(110,30,setValue[8],GREEN,BLACK,1);
 			LCD_print_background(40,40, cstr, CYAN,BLACK, 2);
-			if(mode != 2)
+			if(pageMode != 2)
 				break;
 			if (inputButton == 'R')
 				setValue[8]--;
 			else if(inputButton== 'L')
 				setValue[8]++;
 			else if(inputButton== 'M')
-				mode=0;
+				pageMode=0;
 		}
 	}
-	while(mode==3)  //SPISettings
+	while(pageMode==3)  //SPISettings
 	{
+		eepromDataLoad();
 		LCD_Fill(BLACK);
 		cursor=0;
 		page=0;
@@ -290,8 +295,9 @@ void loop() {
 			}
 			//
 			if(inputButton=='M'&&cursor==2&&page==1){
-				allTime			=	warmingTime+fluxActiveTime+reflowTime+coolTime;
-				mode = 0;
+				eepromDataSave();
+				allTime			=	setValue[0]+setValue[1]+setValue[2]+setValue[3];
+				pageMode = 0;
 				break;
 			}
 			else if(inputButton=='M'){
