@@ -1246,6 +1246,9 @@ build.arch=AVR
     <Compile Include="deviceConnect.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="eepromList.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="font.h">
       <SubType>compile</SubType>
     </Compile>
