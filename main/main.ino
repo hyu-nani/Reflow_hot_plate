@@ -56,7 +56,14 @@ int allTime			=	setValue[0]+setValue[1]+setValue[2]+setValue[3];
 #include "ST7735.h"
 #include "LCDbasic.h"
 #include "formation.h"
+<<<<<<< Updated upstream
 #include "eepromList.h"
+=======
+#include <iostream>
+#include <string>
+
+using namespace std;
+>>>>>>> Stashed changes
 
 void setup() {
 	deviceInit();
@@ -73,9 +80,16 @@ void setup() {
 	LCD_image(25,0,136,80,logo);
 	LCD_display_ON();
 	delay(2000);
+<<<<<<< Updated upstream
 	//eepromDataSave();
 	eepromDataLoad();
 }
+=======
+}
+int nowTime = millis();
+int preTime = nowTime;
+int mode = 0;
+>>>>>>> Stashed changes
 
 void loop() {
 	while(pageMode==0)	//main screen
@@ -144,9 +158,9 @@ void loop() {
 			LCD_print(112,66,"keepTemp",WHITE,1);
 			int tempBar = map(nowTemp,0,300,56,2);
 			if(tempBar>58)
-			tempBar = 58;
+				tempBar = 58;
 			else if(tempBar<2)
-			tempBar = 2;
+				tempBar = 2;
 			LCD_Line(151,tempBar-1,158,tempBar-1,1,BLACK);
 			LCD_Line(151,tempBar,158,tempBar,1,YELLOW);
 			LCD_Line(151,tempBar+1,158,tempBar+1,1,YELLOW);
@@ -162,6 +176,7 @@ void loop() {
 	}
 	while(pageMode==1)	//soldering start
 	{
+<<<<<<< Updated upstream
 		preTime = nowTime;
 		sequence = 0;
 		activeTime = 0;
@@ -227,6 +242,51 @@ void loop() {
 			}
 			solderingLoopScreen();
 			delay(0.001);
+=======
+		startScreen();
+		int ativeTime = 0;
+		int nowTemp = 0;
+		int sequence = 1;
+		digitalWrite(Plate1,HIGH); //hot plate off
+		while(true){
+			nowTime = millis();
+			if(nowTime - preTime >= 1000){//1sec
+				ativeTime++;
+				preTime = nowTime;
+			}
+			nowTemp	= checkTemp();
+			if(ativeTime < 120){//warming up goto 150 degree
+				if(nowTemp < 150){
+					digitalWrite(Plate1,LOW); //hot plate on
+				}
+				else{
+					digitalWrite(Plate1,HIGH); //hot plate off
+				}
+			}
+			else if(ativeTime >= 120 && ativeTime < 240){//flux active time
+				if(nowTemp < 145){
+					digitalWrite(Plate1,LOW); //hot plate on
+				}
+				else{
+					digitalWrite(Plate1,HIGH); //hot plate off
+				}
+			}
+			else if(ativeTime >= 240 && ativeTime < 300){//reflow time
+				if(nowTemp < 230){
+					digitalWrite(Plate1,LOW); //hot plate on
+				}
+				else{
+					digitalWrite(Plate1,HIGH); //hot plate off
+				}
+			}
+			else{//end time cooling
+				digitalWrite(Plate1,HIGH); //hot plate off
+			}
+			delay(100);
+			char str[10];
+			itoa(nowTemp, str, 10);
+			LCD_print(0,40,str,CYAN,2);
+>>>>>>> Stashed changes
 			char inputButton = readSW(true);
 			if(inputButton == 'M')
 				pageMode = 0;
