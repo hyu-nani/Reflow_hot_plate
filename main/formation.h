@@ -107,10 +107,10 @@ char setMenu[20][20] = {
 	"  add time divide ",
 	"  Keep mode temp  ",
 	"  Basic add time  ",
+	"  Temp Gap Warm   ",
+	"  Temp Gap Flux   ",
+	"  Temp Gap Reflow ",
 	" >Home>>>>>>>>>>>>",
-	"                  ",
-	"                  ",
-	"                  ",
 	"                  ",
 	"                  "
 };

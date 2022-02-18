@@ -20,7 +20,9 @@ int basicAddTime	=	7;
 int		cursor		=	0;
 int		page		=	0;
 
-int		tempGap		=	-5; //pcb - hotplate temperature gap
+int		tempGapWarm	=	0;	//warm gap
+int		tempGapFlux	=	0;	//flux gap
+int		tempGapRefl	=	0;	//reflow Gap
 int		activeTime	=	0;
 float	nowTemp;
 int		sequence	=	0;
@@ -28,22 +30,22 @@ int		nowTime		=	millis();
 int		preTime		=	nowTime;
 int		keepTemp	=	100;
 int		pageMode	=	0;
-
+int		discount	=	50;
 
 int setValue[20] = {
-	warmingTime,
-	fluxActiveTime,
-	reflowTime,
-	coolTime,
-	warmingTemp,
-	fluxActiveTemp,
-	reflowTemp,
-	divideTemp,
-	keepTemp,
-	basicAddTime,
-	0,
-	0,
-	0,
+	warmingTime,	//0
+	fluxActiveTime,	//1
+	reflowTime,		//2
+	coolTime,		//3
+	warmingTemp,	//4
+	fluxActiveTemp,	//5
+	reflowTemp,		//6
+	divideTemp,		//7
+	keepTemp,		//8
+	basicAddTime,	//9
+	tempGapWarm,	//10
+	tempGapFlux,	//11
+	tempGapRefl,	//12
 	0,
 	0,
 	0,
@@ -56,14 +58,7 @@ int allTime			=	setValue[0]+setValue[1]+setValue[2]+setValue[3];
 #include "ST7735.h"
 #include "LCDbasic.h"
 #include "formation.h"
-<<<<<<< Updated upstream
 #include "eepromList.h"
-=======
-#include <iostream>
-#include <string>
-
-using namespace std;
->>>>>>> Stashed changes
 
 void setup() {
 	deviceInit();
@@ -80,16 +75,9 @@ void setup() {
 	LCD_image(25,0,136,80,logo);
 	LCD_display_ON();
 	delay(2000);
-<<<<<<< Updated upstream
 	//eepromDataSave();
 	eepromDataLoad();
 }
-=======
-}
-int nowTime = millis();
-int preTime = nowTime;
-int mode = 0;
->>>>>>> Stashed changes
 
 void loop() {
 	while(pageMode==0)	//main screen
@@ -176,7 +164,6 @@ void loop() {
 	}
 	while(pageMode==1)	//soldering start
 	{
-<<<<<<< Updated upstream
 		preTime = nowTime;
 		sequence = 0;
 		activeTime = 0;
@@ -197,7 +184,7 @@ void loop() {
 			if (activeTime < setValue[0])
 			{
 				sequence = 0;
-				if(setValue[4]-nowTemp >= 0)
+				if(setValue[4]+setValue[10]-nowTemp >= 0)
 					add = pow((setValue[4]-nowTemp)/(setValue[7]/10),2);
 				else
 					add = -pow((setValue[4]-nowTemp)/(setValue[7]/10),2);
@@ -211,7 +198,7 @@ void loop() {
 			else if (activeTime < (setValue[0]+setValue[1]))//flux active time
 			{
 				sequence = 1;
-				if(setValue[5]-nowTemp >= 0)
+				if(setValue[5]+setValue[11]-nowTemp >= 0)
 					add = pow((setValue[5]-nowTemp)/(setValue[7]/10),2);
 				else
 					add = -pow((setValue[5]-nowTemp)/(setValue[7]/10),2);
@@ -225,7 +212,7 @@ void loop() {
 			else if (activeTime < (setValue[0]+setValue[1]+setValue[2])) //reflow time
 			{
 				sequence = 2;
-				if(setValue[6]-nowTemp >= 0)
+				if(setValue[6]+setValue[12]-nowTemp >= 0)
 					add = pow((setValue[6]-nowTemp)/(setValue[7]/10),2);
 				else
 					add = -pow((setValue[6]-nowTemp)/(setValue[7]/10),2);
@@ -242,51 +229,6 @@ void loop() {
 			}
 			solderingLoopScreen();
 			delay(0.001);
-=======
-		startScreen();
-		int ativeTime = 0;
-		int nowTemp = 0;
-		int sequence = 1;
-		digitalWrite(Plate1,HIGH); //hot plate off
-		while(true){
-			nowTime = millis();
-			if(nowTime - preTime >= 1000){//1sec
-				ativeTime++;
-				preTime = nowTime;
-			}
-			nowTemp	= checkTemp();
-			if(ativeTime < 120){//warming up goto 150 degree
-				if(nowTemp < 150){
-					digitalWrite(Plate1,LOW); //hot plate on
-				}
-				else{
-					digitalWrite(Plate1,HIGH); //hot plate off
-				}
-			}
-			else if(ativeTime >= 120 && ativeTime < 240){//flux active time
-				if(nowTemp < 145){
-					digitalWrite(Plate1,LOW); //hot plate on
-				}
-				else{
-					digitalWrite(Plate1,HIGH); //hot plate off
-				}
-			}
-			else if(ativeTime >= 240 && ativeTime < 300){//reflow time
-				if(nowTemp < 230){
-					digitalWrite(Plate1,LOW); //hot plate on
-				}
-				else{
-					digitalWrite(Plate1,HIGH); //hot plate off
-				}
-			}
-			else{//end time cooling
-				digitalWrite(Plate1,HIGH); //hot plate off
-			}
-			delay(100);
-			char str[10];
-			itoa(nowTemp, str, 10);
-			LCD_print(0,40,str,CYAN,2);
->>>>>>> Stashed changes
 			char inputButton = readSW(true);
 			if(inputButton == 'M')
 				pageMode = 0;
@@ -370,7 +312,7 @@ void loop() {
 				LCD_print(1,20+cursor*10,">",BLACK,1);
 			}
 			//
-			if(inputButton=='M'&&cursor==3&&page==1){
+			if(inputButton=='M'&&cursor==6&&page==1){
 				eepromDataSave();
 				allTime			=	setValue[0]+setValue[1]+setValue[2]+setValue[3];
 				pageMode = 0;
